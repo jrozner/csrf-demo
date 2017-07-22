@@ -186,105 +186,145 @@ setcookie('CSRF-TOKEN', generateToken($password));
     <script src="js/jquery-1.12.4.min.js"></script>
   </head>
 
-  <body>
-    <div class="row col-md-6 col-md-offset-3">
-      <div class="panel panel-primary">
-        <div class="panel-heading">Normal form</div>
-        <div class="panel-body" id="test-1-body">
-          <form id="test-1" method="POST" action="do.php">
-            <input type="hidden" name="username" value="test" />
-            <input type="submit" class="btn btn-primary" />
-          </form>
-          <pre id="test-1-code"></pre>
+  <body class="carousel slide" data-ride="carousel" data-interval="false">
+    <div class="carousel-inner">
+      <div class="row col-md-6 col-md-offset-3 item active">
+        <div class="panel panel-primary">
+          <div class="panel-heading">Normal form</div>
+          <div class="panel-body" id="test-1-body">
+            <form id="test-1" method="POST" action="do.php">
+              <input type="hidden" name="username" value="test" />
+              <input type="submit" class="btn btn-primary" />
+            </form>
+            <pre id="test-1-code"></pre>
+          </div>
+          <script>
+            $(document).ready(function () {
+              $('#test-1-code').text($('#test-1-body>')[0].outerHTML.replace(/            ([^ ])/g, '$1'));
+            });
+          </script>
         </div>
-        <script>
-          $(document).ready(function () {
-            $('#test-1-code').text($('#test-1-body>')[0].outerHTML.replace(/          ([^ ])/g, '$1'));
-          });
-        </script>
       </div>
-    </div>
 
-    <div class="row col-md-6 col-md-offset-3">
-      <div class="panel panel-primary">
-        <div class="panel-heading">Mock validation, preventDefault, re-submit bubble off</div>
-        <div class="panel-body" id="test-2-body">
-          <form id="test-2" method="POST" action="do.php">
-            <input type="hidden" name="username" value="test" />
-            <input type="submit" class="btn btn-primary" />
+      <div class="row col-md-6 col-md-offset-3 item">
+        <div class="panel panel-primary">
+          <div class="panel-heading">Mock validation, preventDefault, re-submit bubble off</div>
+          <div class="panel-body" id="test-2-body">
+            <form id="test-2" method="POST" action="do.php">
+              <input type="hidden" name="username" value="test" />
+              <input type="submit" class="btn btn-primary" />
+              <script>
+                $(document).ready(function () {
+                  $(document).on('submit', '#test-2', function (evt) {
+                    evt.preventDefault();
+                    if (evt.target === undefined) {
+                      evt.srcElement.submit();
+                    } else {
+                      evt.target.submit();
+                    }
+                    return false;
+                  });
+                });
+              </script>
+            </form>
+            <pre id="test-2-code"></pre>
+          </div>
+          <script>
+            $(document).ready(function () {
+              $('#test-2-code').text($('#test-2-body>')[0].outerHTML.replace(/            ([^ ])/g, '$1'));
+            });
+          </script>
+        </div>
+      </div>
+
+      <div class="row col-md-6 col-md-offset-3 item">
+        <div class="panel panel-primary">
+          <div class="panel-heading">Mock validation, preventDefault, re-submit bubble on</div>
+          <div class="panel-body" id="test-3-body">
+            <form id="test-3" method="POST" action="do.php">
+              <input type="hidden" name="username" value="test" />
+              <input type="submit" class="btn btn-primary" />
+              <script>
+                $(document).ready(function () {
+                  $(document).on('submit', '#test-3', function (evt) {
+                    evt.preventDefault();
+                    if (evt.target === undefined) {
+                      evt.srcElement.submit();
+                    } else {
+                      evt.target.submit();
+                    }
+                    return true;
+                  });
+                });
+              </script>
+            </form>
+            <pre id="test-3-code"></pre>
+          </div>
+          <script>
+            $(document).ready(function () {
+              $('#test-3-code').text($('#test-3-body>')[0].outerHTML.replace(/            ([^ ])/g, '$1'));
+            });
+          </script>
+        </div>
+      </div>
+
+      <div class="row col-md-6 col-md-offset-3 item">
+        <div class="panel panel-primary" id="test-4-panel">
+          <div class="panel-heading">preventDefault submit with xhr</div>
+          <div class="panel-body" id="test-4-body">
+            <form id="test-4" method="POST" action="do.php">
+              <input type="hidden" name="username" value="test" />
+              <input type="submit" class="btn btn-primary" />
+              <script>
+                $(document).ready(function () {
+                  $(document).on('submit', '#test-4', function (evt) {
+                    evt.preventDefault();
+                    var xhr = new XMLHttpRequest();
+                    xhr.open('GET', '/do.php', true);
+                    xhr.onreadystatechange = function () {
+                      if (xhr.readyState === 4) {
+                        if (xhr.status === 200) {
+                          $('#test-4-panel').removeClass('panel-primary').addClass('panel-success');
+                        } else {
+                          $('#test-4-panel').removeClass('panel-primary').addClass('panel-danger');
+                        }
+                      }
+                    }
+                    xhr.send("username=test");
+                    return false;
+                  });
+                });
+              </script>
+            </form>
+            <pre id="test-4-code"></pre>
             <script>
               $(document).ready(function () {
-                $(document).on('submit', '#test-2', function (evt) {
-                  evt.preventDefault();
-                  if (evt.target === undefined) {
-                    evt.srcElement.submit();
-                  } else {
-                    evt.target.submit();
-                  }
-                  return false;
-                });
+                $('#test-4-code').text($('#test-4-body>')[0].outerHTML.replace(/            ([^ ])/g, '$1'));
               });
             </script>
-          </form>
-          <pre id="test-2-code"></pre>
+          </div>
         </div>
-        <script>
-          $(document).ready(function () {
-            $('#test-2-code').text($('#test-2-body>')[0].outerHTML.replace(/          ([^ ])/g, '$1'));
-          });
-        </script>
       </div>
-    </div>
 
-    <div class="row col-md-6 col-md-offset-3">
-      <div class="panel panel-primary">
-        <div class="panel-heading">Mock validation, preventDefault, re-submit bubble on</div>
-        <div class="panel-body" id="test-3-body">
-          <form id="test-3" method="POST" action="do.php">
-            <input type="hidden" name="username" value="test" />
-            <input type="submit" class="btn btn-primary" />
+      <div class="row col-md-6 col-md-offset-3 item">
+        <div class="panel panel-primary" id="test-5-panel">
+          <div class="panel-heading">non-form button xhr</div>
+          <div class="panel-body" id="test-5-body">
+            <button id="test-5-button" class="btn btn-primary">submit</button>
+            <br /><br />
             <script>
               $(document).ready(function () {
-                $(document).on('submit', '#test-3', function (evt) {
-                  evt.preventDefault();
-                  if (evt.target === undefined) {
-                    evt.srcElement.submit();
-                  } else {
-                    evt.target.submit();
-                  }
-                  return true;
-                });
-              });
-            </script>
-          </form>
-          <pre id="test-3-code"></pre>
-        </div>
-        <script>
-          $(document).ready(function () {
-            $('#test-3-code').text($('#test-3-body>')[0].outerHTML.replace(/          ([^ ])/g, '$1'));
-          });
-        </script>
-      </div>
-    </div>
-
-    <div class="row col-md-6 col-md-offset-3">
-      <div class="panel panel-primary">
-        <div class="panel-heading">preventDefault submit with xhr</div>
-        <div class="panel-body" id="test-4-body">
-          <form id="test-4" method="POST" action="do.php">
-            <input type="hidden" name="username" value="test" />
-            <input type="submit" class="btn btn-primary" />
-            <script>
-              $(document).ready(function () {
-                $(document).on('submit', '#test-4', function (evt) {
+                $(document).on('click', '#test-5-button', function (evt) {
                   evt.preventDefault();
                   var xhr = new XMLHttpRequest();
                   xhr.open('GET', '/do.php', true);
                   xhr.onreadystatechange = function () {
-                    if (xhr.readyState === 4 && xhr.status === 200) {
-                      $('#test-4').css({ 'background-color': 'green' });
-                    } else {
-                      $('#test-4').css({ 'background-color': 'red' });
+                    if (xhr.readyState === 4) {
+                      if (xhr.status === 200) {
+                        $('#test-5-panel').removeClass('panel-primary').addClass('panel-success');
+                      } else {
+                        $('#test-5-panel').removeClass('panel-primary').addClass('panel-danger');
+                      }
                     }
                   }
                   xhr.send("username=test");
@@ -292,95 +332,112 @@ setcookie('CSRF-TOKEN', generateToken($password));
                 });
               });
             </script>
-          </form>
-          <pre id="test-4-code"></pre>
+            <pre id="test-5-code"></pre>
+          </div>
           <script>
             $(document).ready(function () {
-              $('#test-4-code').text($('#test-4-body>')[0].outerHTML.replace(/          ([^ ])/g, '$1'));
+              $('#test-5-code').text($('#test-5-body>')[0].outerHTML.replace(/            ([^ ])/g, '$1'));
             });
           </script>
         </div>
       </div>
 
-    <div id="test-5">
-      <p>non-form button xhr</p>
-      <button id="test-5-submit-button">submit</button>
-      <script>
-        $(document).ready(function () {
-          $(document).on('click', '#test-5-submit-button', function (evt) {
-            evt.preventDefault();
-            var xhr = new XMLHttpRequest();
-            xhr.open('GET', '/do.php', true);
-            xhr.onreadystatechange = function () {
-              if (xhr.readyState === 4 && xhr.status === 200) {
-                $('#test-5').css({ 'background-color': 'green' });
-              } else {
-                $('#test-5').css({ 'background-color': 'red' });
-              }
-            }
-            xhr.send("username=test");
-            return false;
+      <div class="row col-md-6 col-md-offset-3 item">
+        <div class="panel panel-primary">
+          <div class="panel-heading">Button submit form</div>
+          <div class="panel-body" id="test-6-body">
+            <form id="test-6" method="POST" action="do.php">
+              <input type="hidden" name="username" value="test" />
+              <button id="test-6-button" class="btn btn-primary">Submit</button>
+              <script>
+                $(document).ready(function () {
+                  $(document).on('click', '#test-6-button', function (evt) {
+                    evt.preventDefault();
+                    $('#test-6').submit();
+                    return false;
+                  });
+                });
+              </script>
+            </form>
+            <pre id="test-6-code"></pre>
+          </div>
+          <script>
+            $(document).ready(function () {
+              $('#test-6-code').text($('#test-6-body>')[0].outerHTML.replace(/            ([^ ])/g, '$1'));
+            });
+          </script>
+        </div>
+      </div>
+
+
+      <div class="row col-md-6 col-md-offset-3 item">
+        <div class="panel panel-primary">
+        <div class="panel-heading">js inserted form</div>
+          <div class="panel-body" id="test-7-body">
+            <script>
+              $(document).ready(function() {
+                var form = document.createElement('form');
+                form.setAttribute('method', 'POST');
+                form.setAttribute('action', '/do.php');
+
+                var input = document.createElement('input');
+                input.setAttribute('type', 'hidden');
+                input.setAttribute('name', 'username');
+                form.appendChild(input);
+
+                var submit = document.createElement('input');
+                submit.setAttribute('type', 'submit');
+                submit.setAttribute('class', 'btn btn-primary');
+                form.appendChild(submit);
+
+                $('#test-7-body').append(form);
+              });
+            </script>
+            <pre id="test-7-code"></pre>
+          </div>
+        </div>
+        <script>
+          $(document).ready(function () {
+            $('#test-7-code').text($('#test-7-body>')[0].outerHTML.replace(/            ([^ ])/g, '$1'));
           });
-        });
-      </script>
+        </script>
+      </div>
+
+      <div class="row col-md-6 col-md-offset-3 item">
+        <div class="panel panel-primary">
+          <div class="panel-heading">js form submit from anchor tag</div>
+          <div class="panel-body" id="test-8-body">
+            <form id="test-8" method="POST" action="do.php">
+              <input type="hidden" name="username" value="test" />
+              <a href="#" id="test-8-submit" class="btn btn-primary"><span>Submit</span></a>
+            </form>
+            <script>
+              $(document).ready(function () {
+                $(document).on('click', '#test-8-submit', function (evt) {
+                  evt.preventDefault();
+                  $('#test-8').submit();
+
+                  return false;
+                });
+              });
+            </script>
+            <pre id="test-8-code"></pre>
+          </div>
+          <script>
+            $(document).ready(function () {
+              $('#test-8-code').text($('#test-8-body>')[0].outerHTML.replace(/            ([^ ])/g, '$1'));
+            });
+          </script>
+        </div>
+      </div>
     </div>
+    <a class="carousel-control left" href="#myCarousel" data-slide="prev">
+        <span class="glyphicon glyphicon-chevron-left"></span>
+    </a>
+    <a class="carousel-control right" href="#myCarousel" data-slide="next">
+        <span class="glyphicon glyphicon-chevron-right"></span>
+    </a>
 
-    <div>
-      <p>Button submit form</p>
-      <form id="test-6" method="POST" action="do.php">
-        <input type="hidden" name="username" value="test" />
-        <button id="test-6-submit-button">Submit</button>
-      </form>
-      <script>
-        $(document).ready(function () {
-          $(document).on('click', '#test-6-submit-button', function (evt) {
-            evt.preventDefault();
-            $('#test-6').submit();
-            return false;
-          });
-        });
-      </script>
-    </div>
-
-    <div id="test-7">
-      <p>js inserted form</p>
-      <button onclick="buildForm()">Add Form</button>
-      <script>
-        function buildForm() {
-          var form = document.createElement('form');
-          form.setAttribute('method', 'POST');
-          form.setAttribute('action', '/do.php');
-
-          var input = document.createElement('input');
-          input.setAttribute('type', 'text');
-          input.setAttribute('name', 'username');
-          form.appendChild(input);
-
-          var submit = document.createElement('input');
-          submit.setAttribute('type', 'submit');
-          form.appendChild(submit);
-
-          $('#test-7').append(form);
-        }
-      </script>
-    </div>
-    <div>
-      <p>js form submit from anchor tag</p>
-      <form id="test-8" method="POST" action="do.php">
-        <input type="hidden" name="username" value="test" />
-        <a href="#" id="test-8-submit" class="btn btn-primary"><span>Submit</span></a>
-      </form>
-      <script>
-        $(document).ready(function () {
-          $(document).on('click', '#test-8-submit', function (evt) {
-            evt.preventDefault();
-            $('#test-8').submit();
-
-            return false;
-          });
-        });
-      </script>
-    </div>
     <script src="js/bootstrap.min.js"></script>
   </body>
   </html>
