@@ -1,0 +1,177 @@
+<script>
+  (function () {
+    if (window.Prevoty !== undefined && window.Prevoty.installed === true) {
+      return;
+    }
+    window.Prevoty = {}
+    window.Prevoty.installed = true;
+
+    try {
+      XMLHttpRequest.prototype._open = XMLHttpRequest.prototype.open;
+      XMLHttpRequest.prototype._send = XMLHttpRequest.prototype.send;
+      XMLHttpRequest.prototype._setRequestHeader = XMLHttpRequest.prototype.setRequestHeader;
+      XMLHttpRequest.prototype.open = function (type, url, async, username, password) {
+        this._options = {
+          type: type,
+          url: url,
+          async: async,
+          username: username,
+          password: password,
+          crossOrigin: isCrossOrigin(url)
+        }
+        this._open.apply(this, arguments);
+      };
+      XMLHttpRequest.prototype.send = function () {
+        // If this is a cross origin request we don't want to touch the headers
+        // because we may not have permission to set the X-Request-With or
+        // X-CSRF-Header per the Access-Control-Allow-Headers and we don't want
+        // to break the request. It's also unclear as to whether the other origin
+        // will even care. If they're running Prevoty on both hosts we can offer
+        // CSRF protection on top of CORS instead of token based.
+        if (!this._options.crossOrigin) {
+          // This is required because calling setRequestHeader with the same name
+          // will join the multiple values with a comma instead of replacing.
+          // This can result in the X-Requested-With header having the value of,
+          // "XMLHttpRequest, XMLHttpRequest" if there is a library such as
+          // jQuery on top of us. This can result in breaking the server side
+          // since it wont expect the multiple copies.
+          if (!this.isRequestHeaderSet('X-Requested-With')) {
+            this.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+          }
+          var tokenValue = getCookieValue('CSRF-TOKEN');
+          // Only set if not null otherwise the sever wont be able to distinguish
+          // between missing and incorrect
+          if (tokenValue !== null) {
+            this.setRequestHeader('X-CSRF-Header', tokenValue);
+          }
+        }
+
+        this._send.apply(this, arguments);
+      };
+      XMLHttpRequest.prototype.setRequestHeader = function (name, value) {
+        if (this._headers === undefined) {
+          this._headers = [];
+        }
+
+        this._headers.push(name);
+        this._setRequestHeader.apply(this, arguments);
+      };
+      XMLHttpRequest.prototype.isRequestHeaderSet = function (name) {
+        if (this._headers === undefined) {
+          return false;
+        }
+
+        for (var i = 0; i < this._headers.length; i++) {
+          if (this._headers[i] === name) {
+            return true;
+          }
+        }
+
+        return false;
+      };
+    } catch (e) {
+      // We're probably an older version of IE or other ancient browser that
+      // doesn't have XHR support. Nothing we can do about that currently
+    }
+
+    function getCookieValue(name) {
+      var matched = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+      return matched ? matched.pop() : null;
+    }
+
+    function submitHook(evt) {
+      var target;
+      if (evt.target !== undefined) {
+        target = evt.target;
+      } else if (evt.srcElement !== undefined) {
+        target = evt.srcElement;
+      } else {
+        // no idea what's going on but bail out; we can't save it
+        return;
+      }
+
+      // Walk up from our initial target looking for one of the delegate
+      // elements we actually care about. Because of the browser support matrix
+      // we don't get to use fancy css selectors here so we need to limit it
+      // just to specific element names. This is to support developers using
+      // elements with JavaScript that they shouldn't to submit forms. This has
+      // the possibility of matching a lot of false positives (eg. click events
+      // for non-submit causing elements) but it shouldn't break anything
+      // because we're always placing the token in the same place in the form.
+      // It can just cause the browser to do some extra work.
+      while (target !== null) {
+        if (target.nodeName === 'A' || target.nodeName === 'INPUT' || target.nodeName === 'BUTTON') {
+          break;
+        }
+
+        target = target.parentNode;
+      }
+
+      // We didn't find any of the delegates, bail out
+      if (target === null) {
+        return;
+      }
+
+      // If it's an input element make sure it's of type submit
+      var type = target.getAttribute('type');
+      if (target.nodeName === 'INPUT' && (type === null || !type.match(/^submit$/i))) {
+        return;
+      }
+
+      // Walk up the DOM to find the form
+      var form;
+      for (var node = target; node !== null; node = node.parentNode) {
+        if (node.nodeName === 'FORM') {
+          form = node;
+          break;
+        }
+      }
+
+      if (form === undefined) {
+        return;
+      }
+
+      var token;
+      if (document.querySelector !== undefined) {
+        token = form.querySelector('input[name="csrf_token"]');
+      } else {
+        var children = form.children;
+        for (var i = 0; i < children.length; i++) {
+          if (children[i].name === 'csrf_token') {
+            token = children[i];
+          }
+        }
+      }
+
+      var tokenValue = getCookieValue('CSRF-TOKEN');
+      if (token !== undefined && token !== null) {
+        if (token.value !== tokenValue) {
+          token.value = tokenValue;
+        }
+
+        // token already exists, we're done
+        return;
+      }
+
+      var newToken = document.createElement('input');
+      newToken.setAttribute('type', 'hidden');
+      newToken.setAttribute('name', 'csrf_token');
+      newToken.setAttribute('value', tokenValue);
+      form.appendChild(newToken);
+    }
+
+    // We bind to the click event because IE doesn't bubble up submit and to
+    // support delegation for other elements.
+    if (document.addEventListener === undefined) {
+      document.attachEvent('onclick', submitHook);
+    } else {
+      // Need to use the 3 parameter version for older Firefox otherwise it
+      // breaks
+      document.addEventListener('click', submitHook, false);
+    }
+
+    function isCrossOrigin(url) {
+      return (url.match(/^\/\/|^https?:\/\//) !== null);
+    }
+  })();
+</script>
